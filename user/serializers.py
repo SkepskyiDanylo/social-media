@@ -11,13 +11,14 @@ class EmptySerializer(serializers.Serializer):
     pass
 
 
-class UserSerializer(serializers.ModelSerializer):
+class MeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
         fields = (
             "id",
             "email",
+            "picture",
             "password",
             "is_email_verified",
             "is_staff",
@@ -55,8 +56,76 @@ class UserSerializer(serializers.ModelSerializer):
         return instance
 
 
+class UserEditSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "email",
+            "picture",
+            "password",
+            "first_name",
+            "last_name",
+            "bio",
+            "link",
+            "status",
+        )
+
+    def validate_password(self, value):
+        try:
+            validate_password(value)
+        except DjangoValidationError as e:
+            raise ValidationError(e.messages)
+        return value
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop("password", None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if password:
+            instance.set_password(password)
+        instance.save()
+        return instance
+
+
+class UserListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "email",
+            "picture",
+            "status",
+            "first_name",
+            "last_name",
+        )
+
+
+class UserDetailSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "email",
+            "picture",
+            "status",
+            "first_name",
+            "last_name",
+            "is_staff",
+            "followers_count",
+            "following_count",
+        )
+
+
 class RequestPasswordResetSerializer(serializers.Serializer):
     email = serializers.EmailField()
+
+
+class CheckTokenResponseSerializer(serializers.Serializer):
+    valid = serializers.BooleanField()
+    detail = serializers.CharField()
 
 
 class SetNewPasswordSerializer(serializers.Serializer):

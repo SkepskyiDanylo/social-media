@@ -4,41 +4,68 @@ import uuid
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.db.models import Q
 from django.utils.translation import gettext as _
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, permissions, viewsets, status
 from rest_framework.generics import (
     RetrieveAPIView,
-    UpdateAPIView,
-    DestroyAPIView,
     get_object_or_404,
 )
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-
+from rest_framework.views import APIView
 
 from social_media_api import settings
 from user.models import User
-from user.permissions import IsAdmin
+from user.permissions import IsAdminOrOwnerOrAuthenticatedReadOnly
 from user.serializers import (
-    UserSerializer,
+    MeSerializer,
     RequestPasswordResetSerializer,
     SetNewPasswordSerializer,
     EmptySerializer,
+    CheckTokenResponseSerializer,
+    UserListSerializer,
+    UserDetailSerializer,
+    UserEditSerializer,
 )
 
 logger = logging.getLogger(__name__)
 
 
+class Pagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = "page_size"
+    page_query_param = "page"
+
+
 @extend_schema(tags=["User"])
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = (IsAdmin,)
+    permission_classes = (IsAdminOrOwnerOrAuthenticatedReadOnly,)
+    pagination_class = Pagination
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return UserListSerializer
+        elif self.action == "retrieve":
+            return UserDetailSerializer
+        elif self.action == "update":
+            return UserEditSerializer
+        return MeSerializer
+
+    def get_queryset(self):
+        queryset = User.objects.all()
+        query = self.request.GET.get("q", None)
+        if query:
+            queryset = queryset.filter(
+                Q(username__icontains=query) | Q(email__icontains=query)
+            )
+        return queryset.exclude(id=self.request.user.id)
 
 
 @extend_schema(tags=["Me"])
 class UserRegister(generics.CreateAPIView):
-    serializer_class = UserSerializer
+    serializer_class = MeSerializer
     queryset = User.objects.all()
     permission_classes = (permissions.AllowAny,)
 
@@ -105,7 +132,9 @@ class PasswordResetView(generics.GenericAPIView):
 
 
 @extend_schema(tags=["Me"])
-class CheckPasswordTokenView(generics.RetrieveAPIView):
+class CheckPasswordTokenView(APIView):
+    http_method_names = ["get"]
+    serializer_class = CheckTokenResponseSerializer
 
     def get(self, request, uid=None, token=None):
         try:
@@ -119,7 +148,7 @@ class CheckPasswordTokenView(generics.RetrieveAPIView):
 
         valid = default_token_generator.check_token(user, token)
         return Response(
-            {"valid": valid},
+            {"valid": valid, "detail": None},
             status=status.HTTP_200_OK if valid else status.HTTP_400_BAD_REQUEST,
         )
 
@@ -157,8 +186,10 @@ class SetNewPasswordAPIView(generics.GenericAPIView):
 
 
 @extend_schema(tags=["Me"])
-class MyProfileView(RetrieveAPIView, UpdateAPIView, DestroyAPIView):
-    serializer_class = UserSerializer
+class MyProfileView(RetrieveAPIView):
+    """Used for side display"""
+
+    serializer_class = MeSerializer
     queryset = User.objects.none()
     permission_classes = (permissions.IsAuthenticated,)
 

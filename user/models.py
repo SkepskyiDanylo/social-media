@@ -1,3 +1,4 @@
+import os
 import uuid
 
 from django.contrib.auth.models import (
@@ -45,15 +46,39 @@ class UserManager(BaseUserManager):
         return self._create_user(email, password, **extra_fields)
 
 
+def user_picture(instance: "User", filename: str) -> str:
+    ext = filename.split(".")[-1]
+    filename = f"{instance.email}-{uuid.uuid4()}.{ext}"
+    return os.path.join("images", "users", filename)
+
+
 class User(BaseModel, AbstractUser):
     username = None
     email = models.EmailField(_("Email address."), unique=True)
     is_email_verified = models.BooleanField(default=False)
+    picture = models.ImageField(upload_to=user_picture, null=True, blank=True)
+    bio = models.CharField(_("Bio"), max_length=255, null=True, blank=True)
+    link = models.URLField(_("Link"), null=True, blank=True)
+    status = models.CharField(_("Status"), max_length=50, null=True, blank=True)
+    followers = models.ManyToManyField(
+        "self",
+        related_name="following",
+        symmetrical=False,
+        blank=True,
+    )
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
     objects = UserManager()
+
+    @property
+    def followers_count(self):
+        return self.followers.count()
+
+    @property
+    def following_count(self):
+        return self.following.count()
 
     def __str__(self):
         return self.email
