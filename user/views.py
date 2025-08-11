@@ -8,11 +8,13 @@ from django.db.models import Q
 from django.utils.translation import gettext as _
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, permissions, viewsets, status
+from rest_framework.decorators import action
 from rest_framework.generics import (
     RetrieveAPIView,
     get_object_or_404,
 )
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -62,6 +64,31 @@ class UserViewSet(viewsets.ModelViewSet):
             )
         return queryset.exclude(id=self.request.user.id)
 
+    @action(
+        detail=True,
+        methods=["post"],
+        permission_classes=[IsAuthenticated],
+        url_name="toggle-follow",
+    )
+    def toggle_follow(self, request, pk=None):
+        instance = self.get_object()
+        user = self.request.user
+        if user == instance:
+            return Response(
+                {"detail": _("You can't follow yourself.")},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if user in instance.followers.all():
+            instance.followers.remove(user)
+            return Response(
+                {"detail": _("You are not following anymore.")}, status=status.HTTP_200_OK
+            )
+        else:
+            instance.followers.add(user)
+            return Response(
+                {"detail": _("You are now following.")}, status=status.HTTP_200_OK
+            )
+
 
 @extend_schema(tags=["Me"])
 class UserRegister(generics.CreateAPIView):
@@ -81,6 +108,21 @@ class UserRegister(generics.CreateAPIView):
                 settings.DEFAULT_FROM_EMAIL,
                 [user.email],
             )
+
+
+@extend_schema(tags=["Me"])
+class MyProfileView(RetrieveAPIView):
+    """Used for side display"""
+
+    serializer_class = MeSerializer
+    queryset = User.objects.none()
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_object(self):
+        return self.request.user
+
+
+# ---------------------------------------------------------------
 
 
 @extend_schema(tags=["Me"])
@@ -183,15 +225,3 @@ class SetNewPasswordAPIView(generics.GenericAPIView):
         return Response(
             {"detail": _("Password reset successful.")}, status=status.HTTP_200_OK
         )
-
-
-@extend_schema(tags=["Me"])
-class MyProfileView(RetrieveAPIView):
-    """Used for side display"""
-
-    serializer_class = MeSerializer
-    queryset = User.objects.none()
-    permission_classes = (permissions.IsAuthenticated,)
-
-    def get_object(self):
-        return self.request.user

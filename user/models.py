@@ -6,6 +6,7 @@ from django.contrib.auth.models import (
     BaseUserManager,
 )
 from django.db import models
+from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
 from social_media.models import BaseModel
@@ -72,11 +73,11 @@ class User(BaseModel, AbstractUser):
 
     objects = UserManager()
 
-    @property
+    @cached_property
     def followers_count(self):
         return self.followers.count()
 
-    @property
+    @cached_property
     def following_count(self):
         return self.following.count()
 

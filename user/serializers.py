@@ -99,10 +99,12 @@ class UserListSerializer(serializers.ModelSerializer):
             "status",
             "first_name",
             "last_name",
+            "followers_count",
         )
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
+    is_followed = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
@@ -116,7 +118,14 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "is_staff",
             "followers_count",
             "following_count",
+            "is_followed",
         )
+
+    def get_is_followed(self, obj):
+        request = self.context.get("request")
+        if not request or request.user.is_anonymous:
+            return False
+        return obj.followers.filter(id=request.user.id).exists()
 
 
 class RequestPasswordResetSerializer(serializers.Serializer):
