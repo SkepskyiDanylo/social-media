@@ -6,7 +6,8 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db.models import Q
 from django.utils.translation import gettext as _
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import generics, permissions, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.generics import (
@@ -45,6 +46,10 @@ class Pagination(PageNumberPagination):
 class UserViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminOrOwnerOrAuthenticatedReadOnly,)
     pagination_class = Pagination
+
+    @extend_schema(parameters=[OpenApiParameter("q", OpenApiTypes.STR, required=False)])
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -139,7 +144,7 @@ class ActivateAccountView(generics.RetrieveAPIView):
             )
 
         if default_token_generator.check_token(user, token):
-            user.is_active = True
+            user.is_email_verified = True
             user.save()
             return Response(
                 {"detail": _("Account activated.")}, status=status.HTTP_200_OK

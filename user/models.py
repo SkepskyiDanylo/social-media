@@ -74,11 +74,11 @@ class User(BaseModel, AbstractUser):
     objects = UserManager()
 
     @cached_property
-    def followers_count(self):
+    def followers_count(self) -> int:
         return self.followers.count()
 
     @cached_property
-    def following_count(self):
+    def following_count(self) -> int:
         return self.following.count()
 
     def __str__(self):
