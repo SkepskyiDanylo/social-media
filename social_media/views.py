@@ -24,7 +24,7 @@ class PostViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        serializer.save(author=self.request.user)
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -51,7 +51,7 @@ class PostViewSet(viewsets.ModelViewSet):
             data=request.data, context={"request": request, "post": instance}
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save(user=self.request.user, post=instance)
+        serializer.save(author=self.request.user, post=instance)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["post"], url_path="add-image")
@@ -60,7 +60,7 @@ class PostViewSet(viewsets.ModelViewSet):
         serializer = PostImageSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(
-            user=request.user, post=instance, position=instance.images.count() + 1
+            author=request.user, post=instance, position=instance.images.count() + 1
         )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 

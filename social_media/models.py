@@ -45,7 +45,7 @@ class PostImage(BaseModel):
 
 
 class Comment(BaseModel):
-    user = models.ForeignKey(
+    author = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="comments"
     )
     parent = models.ForeignKey(
@@ -73,11 +73,11 @@ class Comment(BaseModel):
         verbose_name = _("Comment")
 
     def __str__(self):
-        return f"{self.user} comment for {self.post.pk}"
+        return f"{self.author} comment for {self.post.pk}"
 
 
 class Post(BaseModel):
-    user = models.ForeignKey(
+    author = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="posts"
     )
     likes = models.ManyToManyField(
@@ -97,4 +97,4 @@ class Post(BaseModel):
         return self.likes.count()
 
     def __str__(self):
-        return f"{self.user.email} post #{self.created_at}"
+        return f"{self.author.email} post #{self.created_at}"

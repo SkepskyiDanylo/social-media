@@ -29,12 +29,12 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = (
             "id",
-            "user",
+            "author",
             "post",
             "text",
             "parent",
         )
-        read_only_fields = ("id", "user", "post")
+        read_only_fields = ("id", "author", "post")
 
     def validate(self, attrs):
         parent = attrs.get("parent")
@@ -51,7 +51,7 @@ class CommentNestedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ("id", "user", "text", "replies")
+        fields = ("id", "author", "text", "replies")
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -72,31 +72,31 @@ class PostSerializer(serializers.ModelSerializer):
         model = Post
         fields = (
             "id",
-            "user",
+            "author",
             "description",
             "likes_count",
             "created_at",
             "updated_at",
         )
-        read_only_fields = ("id", "user")
+        read_only_fields = ("id", "author")
 
 
 class PostListSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
+    author = UserSerializer(read_only=True)
     image = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
         fields = (
             "id",
-            "user",
+            "author",
             "image",
             "description",
             "likes_count",
             "created_at",
             "updated_at",
         )
-        read_only_fields = ("id", "user")
+        read_only_fields = ("id", "author")
 
     def get_image(self, obj) -> URLField:
         request = self.context.get("request")
@@ -115,7 +115,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
         model = Post
         fields = (
             "id",
-            "user",
+            "author",
             "description",
             "likes_count",
             "comments",
