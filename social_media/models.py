@@ -1,7 +1,9 @@
 import os
 import uuid
 
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.functional import cached_property
 
 from social_media_api import settings
 from django.utils.translation import gettext_lazy as _
@@ -24,7 +26,7 @@ class PostImage(BaseModel):
     image = models.ImageField(
         upload_to=post_image,
     )
-    post = models.ForeignKey("Post", on_delete=models.CASCADE)
+    post = models.ForeignKey("Post", on_delete=models.CASCADE, related_name="images")
     position = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -50,12 +52,20 @@ class Comment(BaseModel):
         "self", null=True, blank=True, related_name="replies", on_delete=models.CASCADE
     )
     text = models.CharField(max_length=255)
-    post = models.OneToOneField("Post", on_delete=models.CASCADE)
+    post = models.ForeignKey("Post", on_delete=models.CASCADE, related_name="comments")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     likes = models.ManyToManyField(
         settings.AUTH_USER_MODEL, related_name="comment_likes", blank=True
     )
+
+    def clean(self):
+        if self.parent and self.parent.post_id != self.post_id:
+            raise ValidationError(_("Parent comment must belong to the same post."))
+
+    def save(self, *args, **kwargs):
+        self.full_clean()  # вызовет clean()
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ["-created_at"]
@@ -82,5 +92,9 @@ class Post(BaseModel):
         verbose_name_plural = _("Posts")
         verbose_name = _("Post")
 
+    @cached_property
+    def likes_count(self) -> int:
+        return self.likes.count()
+
     def __str__(self):
-        return f"{self.user.username} post #{self.created_at}"
+        return f"{self.user.email} post #{self.created_at}"
