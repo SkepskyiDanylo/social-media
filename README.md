@@ -23,6 +23,7 @@ created as a test assignment on the [Mate Academy](https://mate.academy) platfor
 The project was completed in approximately 7 hours and showcases basic social media 
 functionalities, including user profiles, posts, comments, and interactions. It serves as a 
 practical example of REST API development and Django REST Framework usage.
+
 ---
 
 ### 📊 Project Structure
