@@ -4,33 +4,26 @@ import uuid
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from django.db.models import Q
 from django.utils.translation import gettext as _
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import generics, permissions, viewsets, status
-from rest_framework.decorators import action
+from drf_spectacular.utils import extend_schema
+from rest_framework import generics, permissions, status
 from rest_framework.generics import (
     RetrieveAPIView,
     get_object_or_404,
+    UpdateAPIView,
 )
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from social_media_api import settings
 from user.models import User
-from user.permissions import IsAdminOrOwnerOrAuthenticatedReadOnly
 from user.serializers import (
     MeSerializer,
     RequestPasswordResetSerializer,
     SetNewPasswordSerializer,
     EmptySerializer,
     CheckTokenResponseSerializer,
-    UserListSerializer,
-    UserDetailSerializer,
-    UserEditSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -63,7 +56,7 @@ class UserRegister(generics.CreateAPIView):
 
 
 @extend_schema(tags=["Me"])
-class MyProfileView(RetrieveAPIView):
+class MyProfileView(RetrieveAPIView, UpdateAPIView):
     """Used for side display"""
 
     serializer_class = MeSerializer

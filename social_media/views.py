@@ -1,14 +1,15 @@
 from django.contrib.auth import get_user_model
 from drf_spectacular.utils import extend_schema
-from rest_framework import viewsets, status, permissions
+from rest_framework import viewsets, status, permissions, mixins
 from rest_framework.decorators import action
 from rest_framework.generics import DestroyAPIView, GenericAPIView, RetrieveAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet
 
 from social_media.models import Post, Comment
-from social_media.permissions import CanDeleteComment, PostPermission
+from social_media.permissions import CanDeleteComment, PostPermission, ProfilePermission
 from social_media.serializers import (
     PostSerializer,
     PostListSerializer,
@@ -134,8 +135,14 @@ class CommentToggleLikeView(GenericAPIView):
 
 
 @extend_schema(tags=["Profiles"])
-class ProfileViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticated,)
+class ProfileViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
+    GenericViewSet,
+):
+    permission_classes = (ProfilePermission,)
     pagination_class = Pagination
 
     def get_serializer_class(self):
@@ -149,6 +156,8 @@ class ProfileViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = get_user_model().objects.all()
+        if self.action in "retrieve":
+            queryset = queryset.prefetch_related("posts", "followers")
         return queryset
 
     @action(detail=False, methods=["get"], url_path="me")
@@ -160,7 +169,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"], url_path="me/liked-posts")
     def liked_posts(self, request):
         instance = self.request.user
-        posts = instance.liked_posts.all()
+        posts = instance.liked_posts.select_related("author").prefetch_related("images")
         serializer = self.get_serializer(instance=posts, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

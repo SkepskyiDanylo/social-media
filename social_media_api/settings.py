@@ -8,10 +8,10 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-SECRET_KEY = "django-insecure-*qow8zyh$zdp7@*&v!p12gq2o#tw(k!2fga*kh=mt3&rz5edhd"
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 
-DEBUG = True
+DEBUG = os.getenv("DEBUG").lower() == "true"
 
 ALLOWED_HOSTS = []
 
@@ -110,8 +110,12 @@ REST_FRAMEWORK = {
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ["POSTGRES_DB"],
+        "USER": os.environ["POSTGRES_USER"],
+        "PASSWORD": os.environ["POSTGRES_PASSWORD"],
+        "HOST": os.environ["POSTGRES_HOST"],
+        "PORT": os.environ["POSTGRES_PORT"],
     }
 }
 
@@ -223,7 +227,6 @@ SPECTACULAR_SETTINGS = {
 
 LANGUAGES = [
     ("en", "English"),
-    ("ru", "Russian"),
     ("ua", "Ukrainian"),
 ]
 
@@ -235,6 +238,6 @@ CELERY_TIMEZONE = "UTC"
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
 
-CELERY_RESULT_BACKEND = "django-cache"
+CELERY_RESULT_BACKEND = "django-db"
 
-CELERY_BROKER_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")

@@ -1,0 +1,110 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-08-14 16:16+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: .\social_media\models.py:40
+msgid "Post Images"
+msgstr "Зображення публікацій"
+
+#: .\social_media\models.py:41
+msgid "Post Image"
+msgstr "Зображення публікації"
+
+#: .\social_media\models.py:64
+msgid "Parent comment must belong to the same post."
+msgstr "Батьківський коментар має належати до тієї ж публікації."
+
+#: .\social_media\models.py:72
+msgid "Comments"
+msgstr "Коментарі"
+
+#: .\social_media\models.py:73
+msgid "Comment"
+msgstr "Коментар"
+
+#: .\social_media\models.py:95
+msgid "Posts"
+msgstr "Публікації"
+
+#: .\social_media\models.py:96
+msgid "Post"
+msgstr "Публікація"
+
+#: .\social_media\serializers.py:47
+msgid "Parent comment belongs to another post."
+msgstr "Батьківський коментар належить до іншої публікації."
+
+#: .\user\admin.py:36
+msgid "Personal info"
+msgstr "Особиста інформація"
+
+#: .\user\admin.py:40
+msgid "Permissions"
+msgstr "Дозволи"
+
+#: .\user\admin.py:50
+msgid "Important dates"
+msgstr "Важливі дати"
+
+#: .\user\admin.py:51
+msgid "Followers"
+msgstr "Підписники"
+
+#: .\user\models.py:58
+msgid "Email address."
+msgstr "Адреса електронної пошти."
+
+#: .\user\models.py:61
+msgid "Bio"
+msgstr "Біографія"
+
+#: .\user\models.py:62
+msgid "Link"
+msgstr "Посилання"
+
+#: .\user\models.py:63
+msgid "Status"
+msgstr "Статус"
+
+#: .\user\views.py:83 .\user\views.py:132
+msgid "Invalid link."
+msgstr "Недійсне посилання."
+
+#: .\user\views.py:90
+msgid "Account activated."
+msgstr "Акаунт активовано."
+
+#: .\user\views.py:93
+msgid "Token invalid or expired."
+msgstr "Токен недійсний або прострочений."
+
+#: .\user\views.py:117
+msgid "The reset link has been sent."
+msgstr "Посилання для скидання надіслано."
+
+#: .\user\views.py:159
+msgid "Invalid uid."
+msgstr "Недійсний uid."
+
+#: .\user\views.py:164
+msgid "Token invalid or expired"
+msgstr "Токен недійсний або прострочений"
+
+#: .\user\views.py:171
+msgid "Password reset successful."
+msgstr "Пароль успішно скинуто."
