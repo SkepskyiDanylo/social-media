@@ -16,4 +16,6 @@ class PostPermission(BasePermission):
 class CanDeleteComment(BasePermission):
     def has_object_permission(self, request, view, obj):
         user = request.user
-        return user.is_authenticated and user == obj.author or user == obj.post.author
+        if request.method == "DELETE":
+            return user.is_authenticated and user == obj.author or user == obj.post.author
+        return user.is_authenticated

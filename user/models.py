@@ -81,5 +81,11 @@ class User(BaseModel, AbstractUser):
     def following_count(self) -> int:
         return self.following.count()
 
+    @property
+    def full_name(self) -> str:
+        return f"{self.first_name} {self.last_name}".strip()
+
     def __str__(self):
+        if self.full_name:
+            return f"{self.full_name} <{self.email}>"
         return self.email

@@ -41,7 +41,7 @@ class PostImage(BaseModel):
         verbose_name = _("Post Image")
 
     def __str__(self):
-        return f"{self.post.pk} - {self.position}"
+        return f"Image {self.position} for Post {self.post.id}"
 
 
 class Comment(BaseModel):
@@ -73,7 +73,8 @@ class Comment(BaseModel):
         verbose_name = _("Comment")
 
     def __str__(self):
-        return f"{self.author} comment for {self.post.pk}"
+        snippet = (self.text[:30] + "...") if len(self.text) > 30 else self.text
+        return f"{self.author} → Post {self.post.id}: {snippet}"
 
 
 class Post(BaseModel):
@@ -83,7 +84,9 @@ class Post(BaseModel):
     likes = models.ManyToManyField(
         settings.AUTH_USER_MODEL, related_name="liked_posts", blank=True
     )
-    description = models.CharField(max_length=255)
+    content = models.CharField(max_length=255)
+    is_published = models.BooleanField(default=False)
+    scheduled_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -92,9 +95,16 @@ class Post(BaseModel):
         verbose_name_plural = _("Posts")
         verbose_name = _("Post")
 
+    def publish(self):
+        self.is_published = True
+        if self.scheduled_at:
+            self.created_at = self.scheduled_at
+        self.save()
+
+    def __str__(self):
+        snippet = (self.content[:30] + "...") if len(self.content) > 30 else self.content
+        return f"{self.author.email} | {snippet} ({'published' if self.is_published else 'draft'})"
+
     @cached_property
     def likes_count(self) -> int:
         return self.likes.count()
-
-    def __str__(self):
-        return f"{self.author.email} post #{self.created_at}"
