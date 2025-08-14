@@ -165,7 +165,7 @@ POST /api/user/register/
 }
 ```
 
-### 🎟 Create delayed Post
+### 📤 Create delayed Post
 
 ```https
 POST /api/social-media/posts/
@@ -222,7 +222,6 @@ To add new messages to translation use `gettext` or `gettext_lazy`
 
 1. After adding new messages:
     ```bash
-   python manage.py makemessages -l ru
    python manage.py makemessages -l ua
    ```
    Then add translation to messages in `.po` files: [ua](locale/ua/LC_MESSAGES/django.po)
