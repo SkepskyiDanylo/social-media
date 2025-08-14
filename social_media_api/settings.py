@@ -237,12 +237,4 @@ CELERY_TASK_TIME_LIMIT = 30 * 60
 
 CELERY_RESULT_BACKEND = "django-cache"
 
-CELERY_CACHE_BACKEND = "default"
 CELERY_BROKER_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
-        "LOCATION": "my_cache_table",
-    }
-}
