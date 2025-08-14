@@ -42,59 +42,6 @@ class Pagination(PageNumberPagination):
     page_query_param = "page"
 
 
-@extend_schema(tags=["User"])
-class UserViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAdminOrOwnerOrAuthenticatedReadOnly,)
-    pagination_class = Pagination
-
-    @extend_schema(parameters=[OpenApiParameter("q", OpenApiTypes.STR, required=False)])
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
-
-    def get_serializer_class(self):
-        if self.action == "list":
-            return UserListSerializer
-        elif self.action == "retrieve":
-            return UserDetailSerializer
-        elif self.action == "update":
-            return UserEditSerializer
-        return MeSerializer
-
-    def get_queryset(self):
-        queryset = User.objects.all()
-        query = self.request.GET.get("q", None)
-        if query:
-            queryset = queryset.filter(
-                Q(username__icontains=query) | Q(email__icontains=query)
-            )
-        return queryset.exclude(id=self.request.user.id)
-
-    @action(
-        detail=True,
-        methods=["post"],
-        permission_classes=[IsAuthenticated],
-        url_name="toggle-follow",
-    )
-    def toggle_follow(self, request, pk=None):
-        instance = self.get_object()
-        user = self.request.user
-        if user == instance:
-            return Response(
-                {"detail": _("You can't follow yourself.")},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if user in instance.followers.all():
-            instance.followers.remove(user)
-            return Response(
-                {"detail": _("You are not following anymore.")}, status=status.HTTP_200_OK
-            )
-        else:
-            instance.followers.add(user)
-            return Response(
-                {"detail": _("You are now following.")}, status=status.HTTP_200_OK
-            )
-
-
 @extend_schema(tags=["Me"])
 class UserRegister(generics.CreateAPIView):
     serializer_class = MeSerializer

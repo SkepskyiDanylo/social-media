@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "debug_toolbar",
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
+    "django_celery_results",
     "drf_spectacular",
     "social_media",
     "user",
@@ -229,3 +230,19 @@ LANGUAGES = [
 LOCALE_PATHS = [
     BASE_DIR / "locale",
 ]
+
+CELERY_TIMEZONE = "UTC"
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
+
+CELERY_RESULT_BACKEND = "django-cache"
+
+CELERY_CACHE_BACKEND = "default"
+CELERY_BROKER_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "my_cache_table",
+    }
+}

@@ -1,5 +1,4 @@
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -10,7 +9,6 @@ from rest_framework_simplejwt.views import (
 from social_media_api import settings
 from user.views import (
     UserRegister,
-    UserViewSet,
     MyProfileView,
     ActivateAccountView,
     PasswordResetView,
@@ -18,8 +16,6 @@ from user.views import (
     SetNewPasswordAPIView,
 )
 
-router = DefaultRouter()
-router.register("users", UserViewSet, basename="user")
 
 urlpatterns = [
     path("token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
@@ -28,7 +24,6 @@ urlpatterns = [
     path("token/blacklist/", TokenBlacklistView.as_view(), name="token_blacklist"),
     path("register/", UserRegister.as_view(), name="register"),
     path("me/", MyProfileView.as_view(), name="my-profile"),
-    path("", include(router.urls)),
 ]
 
 

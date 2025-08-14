@@ -1,9 +1,12 @@
+from django.contrib.auth import get_user_model
+from django.utils.timezone import now
 from rest_framework import serializers
 from rest_framework.fields import URLField
 
 from social_media.models import PostImage, Comment, Post
-from user.models import User
 from django.utils.translation import gettext_lazy as _
+
+from social_media.tasks import delayed_post_publish
 
 
 class PostImageSerializer(serializers.ModelSerializer):
@@ -48,15 +51,22 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class CommentNestedSerializer(serializers.ModelSerializer):
     replies = RecursiveField(many=True, read_only=True)
+    is_liked = serializers.SerializerMethodField()
+    author_name = serializers.CharField(source="author.full_name", read_only=True)
 
     class Meta:
         model = Comment
-        fields = ("id", "author", "text", "replies")
+        fields = ("id", "author", "author_name", "text", "is_liked", "replies")
+
+    def get_is_liked(self, obj) -> bool:
+        request = self.context.get("request")
+        user = request.user
+        return user in obj.likes.all()
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
+        model = get_user_model()
         fields = (
             "id",
             "email",
@@ -73,12 +83,26 @@ class PostSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "author",
-            "description",
+            "content",
             "likes_count",
+            "scheduled_at",
             "created_at",
             "updated_at",
         )
         read_only_fields = ("id", "author")
+
+    def create(self, validated_data):
+        scheduled_at = validated_data.get("scheduled_at")
+        post = super().create(validated_data)
+
+        if scheduled_at and scheduled_at > now():
+            task = delayed_post_publish.apply_async(args=[post.id], eta=scheduled_at)
+            post.celery_task_id = task.id
+            post.save()
+        else:
+            post.publish()
+
+        return post
 
 
 class PostListSerializer(serializers.ModelSerializer):
@@ -91,7 +115,7 @@ class PostListSerializer(serializers.ModelSerializer):
             "id",
             "author",
             "image",
-            "description",
+            "content",
             "likes_count",
             "created_at",
             "updated_at",
@@ -116,7 +140,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "author",
-            "description",
+            "content",
             "likes_count",
             "comments",
             "created_at",
@@ -135,3 +159,43 @@ class PostDetailSerializer(serializers.ModelSerializer):
     def get_comments(self, obj) -> CommentNestedSerializer(many=True):
         queryset = obj.comments.filter(parent__isnull=True)
         return CommentNestedSerializer(queryset, many=True, context=self.context).data
+
+
+class ProfileListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = get_user_model()
+        fields = (
+            "id",
+            "email",
+            "picture",
+            "first_name",
+            "last_name",
+            "followers_count",
+        )
+
+
+class ProfileDetailSerializer(serializers.ModelSerializer):
+    is_followed = serializers.SerializerMethodField()
+    posts = PostListSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = get_user_model()
+        fields = (
+            "id",
+            "email",
+            "picture",
+            "first_name",
+            "last_name",
+            "followers_count",
+            "following_count",
+            "is_followed",
+            "posts",
+        )
+
+    def get_is_followed(self, obj) -> bool:
+        request = self.context.get("request")
+        user = request.user
+        if user in obj.followers.all():
+            return True
+        return False
