@@ -138,11 +138,13 @@ docker-compose down
 ## 🗄️ Project Structure
 
 ```
+├── locale/
+    └── ua/
 ├── social_media/    # Posts, Comments, Profiles
 ├── user/            # User management, Registration, Login, Logout
-├──social_media_api/
-   ├── settings.py
-   └──...
+├── social_media_api/
+    ├── settings.py
+    └──...
 ├── manage.py
 ├── Dockerfile
 ├── docker-compose.yaml
